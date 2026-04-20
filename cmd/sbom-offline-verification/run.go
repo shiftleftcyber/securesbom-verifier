@@ -101,20 +101,20 @@ func (c *command) parseArgs(args []string) (options, error) {
 	}
 
 	if strings.TrimSpace(*pubKeyPath) == "" {
-		fmt.Fprintln(c.stderr, "Error: -pubkey is required")
+		_, _ = fmt.Fprintln(c.stderr, "Error: --pubkey is required")
 		fs.Usage()
 		return options{}, errors.New("missing required -pubkey")
 	}
 
 	if strings.TrimSpace(*digestValue) == "" && strings.TrimSpace(*sbomPath) == "" {
-		fmt.Fprintln(c.stderr, "Error: either -sbom or -digest is required")
+		_, _ = fmt.Fprintln(c.stderr, "Error: either -sbom or -digest is required")
 		fs.Usage()
 		return options{}, errors.New("either -sbom or -digest is required")
 	}
 
 	verificationVersion, err := parseVerificationVersion(*verificationVersionParam)
 	if err != nil {
-		fmt.Fprintf(c.stderr, "Invalid -verification-version (expected v1 or v2): %v\n", err)
+		_, _ = fmt.Fprintf(c.stderr, "Invalid -verification-version (expected v1 or v2): %v\n", err)
 		return options{}, err
 	}
 
@@ -151,7 +151,7 @@ func (c *command) loadTextFile(path string, label string) (string, error) {
 func (c *command) loadFileWithLabel(path string, label string) ([]byte, error) {
 	content, err := c.loadFile(path)
 	if err != nil {
-		fmt.Fprintf(c.stderr, "%s: %v\n", label, err)
+		_, _ = fmt.Fprintf(c.stderr, "%s: %v\n", label, err)
 		return nil, err
 	}
 	return content, nil
@@ -160,12 +160,12 @@ func (c *command) loadFileWithLabel(path string, label string) ([]byte, error) {
 func (c *command) verifySBOM(app *application.VerifierApp, sbom []byte, public string, opts options) (*application.VerificationResult, string, error) {
 	result, err := sbomValidator.ValidateSBOMData(sbom)
 	if err != nil {
-		fmt.Fprintf(c.stderr, "SBOM validation failed: %v\n", err)
+		_, _ = fmt.Fprintf(c.stderr, "SBOM validation failed: %v\n", err)
 		return nil, "", err
 	}
 	if !result.IsValid {
 		err := fmt.Errorf("%v", result.ValidationErrors)
-		fmt.Fprintf(c.stderr, "Invalid SBOM: %v\n", err)
+		_, _ = fmt.Fprintf(c.stderr, "Invalid SBOM: %v\n", err)
 		return nil, "", err
 	}
 
@@ -176,7 +176,7 @@ func (c *command) verifySBOM(app *application.VerifierApp, sbom []byte, public s
 		return c.verifySPDX(app, sbom, opts.signature, public, opts.verificationVersion)
 	default:
 		err := fmt.Errorf("sbom type: %s", result.SBOMType)
-		fmt.Fprintf(c.stderr, "Unsupported SBOM type: %v\n", err)
+		_, _ = fmt.Fprintf(c.stderr, "Unsupported SBOM type: %v\n", err)
 		return nil, "", err
 	}
 }
@@ -204,13 +204,13 @@ func (c *command) verifySPDX(
 ) (*application.VerificationResult, string, error) {
 	if signature == "" {
 		err := fmt.Errorf("SPDX verification requires --signature")
-		fmt.Fprintf(c.stderr, "Error: %v\n", err)
+		_, _ = fmt.Fprintf(c.stderr, "Error: %v\n", err)
 		return nil, "", err
 	}
 
 	canonical, err := sbomService.CanonicalizeUnsignedSBOM(sbom)
 	if err != nil {
-		fmt.Fprintf(c.stderr, "Failed to canonicalize SPDX SBOM: %v\n", err)
+		_, _ = fmt.Fprintf(c.stderr, "Failed to canonicalize SPDX SBOM: %v\n", err)
 		return nil, "", err
 	}
 
@@ -225,7 +225,7 @@ func (c *command) verifySPDX(
 func (c *command) verifyDigest(opts options, publicKeyPEM string) error {
 	if opts.signature == "" {
 		err := fmt.Errorf("digest verification requires -signature")
-		fmt.Fprintf(c.stderr, "Error: %v\n", err)
+		_, _ = fmt.Fprintf(c.stderr, "Error: %v\n", err)
 		return err
 	}
 
@@ -260,26 +260,26 @@ func printResult(writer io.Writer, isSuccess bool, mode, subjectLabel, subjectVa
 	divider := "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 	if isSuccess {
-		fmt.Fprintln(writer, divider)
-		fmt.Fprintln(writer, " ✅  VERIFICATION SUCCESSFUL")
-		fmt.Fprintln(writer, divider)
-		fmt.Fprintf(writer, " Verification Mode:    %s\n", mode)
-		fmt.Fprintf(writer, " %-20s %s\n", subjectLabel+":", subjectValue)
-		fmt.Fprintf(writer, " Algorithm:            %s\n", algorithm)
-		fmt.Fprintf(writer, " Message:              %s\n", message)
-		fmt.Fprintf(writer, " Public Key:           OK\n")
-		fmt.Fprintln(writer, divider)
+		_, _ = fmt.Fprintln(writer, divider)
+		_, _ = fmt.Fprintln(writer, " ✅  VERIFICATION SUCCESSFUL")
+		_, _ = fmt.Fprintln(writer, divider)
+		_, _ = fmt.Fprintf(writer, " Verification Mode:    %s\n", mode)
+		_, _ = fmt.Fprintf(writer, " %-20s %s\n", subjectLabel+":", subjectValue)
+		_, _ = fmt.Fprintf(writer, " Algorithm:            %s\n", algorithm)
+		_, _ = fmt.Fprintf(writer, " Message:              %s\n", message)
+		_, _ = fmt.Fprintf(writer, " Public Key:           OK\n")
+		_, _ = fmt.Fprintln(writer, divider)
 		return
 	}
 
-	fmt.Fprintln(writer, divider)
-	fmt.Fprintln(writer, " ❌  VERIFICATION FAILED")
-	fmt.Fprintln(writer, divider)
-	fmt.Fprintf(writer, " Verification Mode:    %s\n", mode)
-	fmt.Fprintf(writer, " Reason:               %v\n", reason)
-	fmt.Fprintf(writer, " %-20s %s\n", subjectLabel+":", subjectValue)
+	_, _ = fmt.Fprintln(writer, divider)
+	_, _ = fmt.Fprintln(writer, " ❌  VERIFICATION FAILED")
+	_, _ = fmt.Fprintln(writer, divider)
+	_, _ = fmt.Fprintf(writer, " Verification Mode:    %s\n", mode)
+	_, _ = fmt.Fprintf(writer, " Reason:               %v\n", reason)
+	_, _ = fmt.Fprintf(writer, " %-20s %s\n", subjectLabel+":", subjectValue)
 	if algorithm != "" {
-		fmt.Fprintf(writer, " Algorithm:            %s\n", algorithm)
+		_, _ = fmt.Fprintf(writer, " Algorithm:            %s\n", algorithm)
 	}
-	fmt.Fprintln(writer, divider)
+	_, _ = fmt.Fprintln(writer, divider)
 }

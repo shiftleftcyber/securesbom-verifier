@@ -1,9 +1,11 @@
+BINARY_NAME ?= sbom-offline-verification
 GOCACHE ?= $(CURDIR)/.gocache
 GOEXPERIMENT ?= jsonv2
+GOFILES := $(shell find . -name "*.go")
+GOFMT ?= gofmt "-s"
+DIST_DIR ?= dist
 IMAGE_NAME ?= secure-sbom-verification-cli
 IMAGE_TAG ?= dev
-BINARY_NAME ?= sbom-offline-verification
-DIST_DIR ?= dist
 
 .PHONY: test coverage build-cli docker-build tidy clean
 
@@ -30,3 +32,20 @@ tidy:
 clean:
 	chmod -R u+w $(GOCACHE) 2>/dev/null || true
 	rm -rf $(GOCACHE) $(DIST_DIR) coverage.out $(BINARY_NAME) 2>/dev/null || true
+
+.PHONY: fmt
+fmt:
+	$(GOFMT) -w $(GOFILES)
+
+.PHONY: fmt-check
+fmt-check:
+	@diff=$$($(GOFMT) -d $(GOFILES)); \
+	if [ -n "$$diff" ]; then \
+		echo "Please run 'make fmt' and commit the result:"; \
+		echo "$${diff}"; \
+		exit 1; \
+	fi;
+
+.PHONY: lint
+lint:
+	@DOCKER run --rm -v $(shell pwd):/app -w /app --env GOEXPERIMENT=jsonv2 golangci/golangci-lint:v2.8.0-alpine golangci-lint run ./...
