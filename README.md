@@ -22,35 +22,6 @@ extraction can be iterated on without removing code from the API project yet.
 - an offline verification CLI
 - tests for the lower-level verification building blocks
 
-## What Stays In `sbom-signing-api`
-
-The API repository should continue to own:
-
-- HTTP handlers
-- request and response models tied to API contracts
-- auth and customer authorization
-- Firestore lookup and key ownership checks
-- service-layer orchestration for API requests
-- key generation and signing flows
-
-In other words, the API repo should call into this module for business logic,
-but it should still own transport, tenancy, and infrastructure concerns.
-
-## Proposed Import Boundary
-
-The clearest future integration point is:
-
-- keep `api/services/verify` in `sbom-signing-api`
-- keep API digest request handling in `api/services/digest`
-- replace the local verification internals with imports from this module
-
-That would let your API continue to resolve customer keys and then delegate to:
-
-- `application.VerifierApp`
-- `services/digest`
-- `services/sbom`
-- `utils`
-
 ## Verification-Only Scope
 
 This module intentionally excludes:
@@ -144,11 +115,3 @@ next-step extraction plan from `sbom-signing-api`.
 
 The example program expects you to provide a signed SBOM path and a public key
 path at runtime.
-
-## Publishing Checklist
-
-- choose and add an OSS license
-- decide whether to preserve current package names or introduce cleaner public APIs
-- add CI for `go test ./...`
-- publish tagged releases for the CLI
-- add end-to-end fixtures for CycloneDX and SPDX sample verification
