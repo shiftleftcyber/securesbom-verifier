@@ -6,8 +6,9 @@ GOFMT ?= gofmt "-s"
 DIST_DIR ?= dist
 IMAGE_NAME ?= secure-sbom-verification-cli
 IMAGE_TAG ?= dev
+GOVULNCHECK_SCAN ?= package
 
-.PHONY: test coverage build-cli docker-build tidy clean
+.PHONY: test coverage build-cli docker-build tidy vulncheck clean
 
 test:
 	mkdir -p $(GOCACHE)
@@ -28,6 +29,10 @@ docker-build:
 tidy:
 	mkdir -p $(GOCACHE)
 	GOEXPERIMENT=$(GOEXPERIMENT) GOCACHE=$(GOCACHE) go mod tidy
+
+vulncheck:
+	mkdir -p $(GOCACHE)
+	GOEXPERIMENT=$(GOEXPERIMENT) GOCACHE=$(GOCACHE) govulncheck -scan=$(GOVULNCHECK_SCAN) ./...
 
 clean:
 	chmod -R u+w $(GOCACHE) 2>/dev/null || true
