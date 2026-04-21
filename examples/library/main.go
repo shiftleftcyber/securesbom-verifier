@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/shiftleftcyber/secure-sbom-verifier/application"
+	"github.com/shiftleftcyber/securesbom-verifier/application"
 )
 
 func main() {

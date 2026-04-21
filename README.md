@@ -1,6 +1,6 @@
 # Secure SBOM Verifier
 
-`secure-sbom-verifier` is a standalone Go module that contains the verification
+`securesbom-verifier` is a standalone Go module that contains the verification
 logic currently embedded in the `sbom-signing-api` service. It is designed to be
 published as an open source library and reused by:
 
