@@ -3,7 +3,7 @@ package application
 import (
 	"fmt"
 
-	"github.com/shiftleftcyber/secure-sbom-verifier/services"
+	"github.com/shiftleftcyber/securesbom-verifier/services"
 
 	sbomValidator "github.com/shiftleftcyber/sbom-validator/v2"
 )

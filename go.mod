@@ -1,4 +1,4 @@
-module github.com/shiftleftcyber/secure-sbom-verifier
+module github.com/shiftleftcyber/securesbom-verifier
 
 go 1.25.7
 

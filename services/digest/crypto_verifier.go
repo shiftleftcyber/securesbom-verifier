@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/shiftleftcyber/secure-sbom-verifier/verificationkey"
+	"github.com/shiftleftcyber/securesbom-verifier/verificationkey"
 )
 
 type cryptoVerifier struct{}

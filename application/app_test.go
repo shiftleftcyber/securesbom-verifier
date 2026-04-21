@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/shiftleftcyber/secure-sbom-verifier/services"
-	"github.com/shiftleftcyber/secure-sbom-verifier/testsupport"
+	"github.com/shiftleftcyber/securesbom-verifier/services"
+	"github.com/shiftleftcyber/securesbom-verifier/testsupport"
 )
 
 func TestNewVerifierApp(t *testing.T) {

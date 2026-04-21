@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/shiftleftcyber/secure-sbom-verifier/testsupport"
+	"github.com/shiftleftcyber/securesbom-verifier/testsupport"
 )
 
 func TestCommandRun_CycloneDXSuccess(t *testing.T) {

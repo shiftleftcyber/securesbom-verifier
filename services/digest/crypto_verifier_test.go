@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/shiftleftcyber/secure-sbom-verifier/verificationkey"
+	"github.com/shiftleftcyber/securesbom-verifier/verificationkey"
 )
 
 func generateECDSAPublicKeyPEM(t *testing.T, pubKey *ecdsa.PublicKey) string {

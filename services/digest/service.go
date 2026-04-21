@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/shiftleftcyber/secure-sbom-verifier/verificationkey"
+	"github.com/shiftleftcyber/securesbom-verifier/verificationkey"
 )
 
 type Service interface {

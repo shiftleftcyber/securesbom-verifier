@@ -7,8 +7,8 @@ import (
 	"errors"
 	"fmt"
 
-	digestsbom "github.com/shiftleftcyber/secure-sbom-verifier/services/sbom"
-	"github.com/shiftleftcyber/secure-sbom-verifier/utils"
+	digestsbom "github.com/shiftleftcyber/securesbom-verifier/services/sbom"
+	"github.com/shiftleftcyber/securesbom-verifier/utils"
 )
 
 func (v *VerifierApp) VerifyCycloneDXEmbeddedV1(signedSBOM []byte, publicKeyPEM string) (*VerificationResult, error) {

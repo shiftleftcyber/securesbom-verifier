@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	digestsbom "github.com/shiftleftcyber/secure-sbom-verifier/services/sbom"
-	"github.com/shiftleftcyber/secure-sbom-verifier/utils"
+	digestsbom "github.com/shiftleftcyber/securesbom-verifier/services/sbom"
+	"github.com/shiftleftcyber/securesbom-verifier/utils"
 )
 
 func (v *VerifierApp) VerifySPDXDetachedV1(sbom []byte, signatureB64 string, publicKeyPEM string) (*VerificationResult, error) {

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/shiftleftcyber/secure-sbom-verifier/testsupport"
+	"github.com/shiftleftcyber/securesbom-verifier/testsupport"
 )
 
 func TestVerifyExample(t *testing.T) {

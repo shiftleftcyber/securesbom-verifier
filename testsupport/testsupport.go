@@ -14,7 +14,7 @@ import (
 	"runtime"
 	"testing"
 
-	sbomsvc "github.com/shiftleftcyber/secure-sbom-verifier/services/sbom"
+	sbomsvc "github.com/shiftleftcyber/securesbom-verifier/services/sbom"
 )
 
 func FixtureBytes(t *testing.T, name string) []byte {

@@ -8,10 +8,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/shiftleftcyber/secure-sbom-verifier/application"
-	digestsigning "github.com/shiftleftcyber/secure-sbom-verifier/services/digest"
-	sbomService "github.com/shiftleftcyber/secure-sbom-verifier/services/sbom"
-	"github.com/shiftleftcyber/secure-sbom-verifier/verificationkey"
+	"github.com/shiftleftcyber/securesbom-verifier/application"
+	digestsigning "github.com/shiftleftcyber/securesbom-verifier/services/digest"
+	sbomService "github.com/shiftleftcyber/securesbom-verifier/services/sbom"
+	"github.com/shiftleftcyber/securesbom-verifier/verificationkey"
 
 	sbomValidator "github.com/shiftleftcyber/sbom-validator/v2"
 )
