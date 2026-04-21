@@ -64,6 +64,9 @@ jobs:
 
   codeql:
     name: CodeQL
+    # CodeQL works for public repos by default, but private repos need
+    # GitHub Code Security / Advanced Security enabled at the repo or org level.
+    if: github.event.repository.private == false
     runs-on: ubuntu-latest
     permissions:
       actions: read
