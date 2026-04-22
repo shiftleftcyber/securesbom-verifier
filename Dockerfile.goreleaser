@@ -1,0 +1,8 @@
+FROM gcr.io/distroless/static-debian12:nonroot
+
+ARG TARGETPLATFORM
+
+WORKDIR /
+COPY ${TARGETPLATFORM}/sbom-offline-verification /usr/local/bin/sbom-offline-verification
+
+ENTRYPOINT ["/usr/local/bin/sbom-offline-verification"]

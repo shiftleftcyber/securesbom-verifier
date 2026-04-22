@@ -175,7 +175,10 @@ GOEXPERIMENT=jsonv2 go run ./cmd/sbom-offline-verification \
 
 Tagged releases matching `vX.X.X` are built with Goreleaser using
 [.goreleaser.yml](.goreleaser.yml). The release workflow publishes multi-platform
-CLI archives and a checksum file to the GitHub release.
+CLI archives, a checksum file, and a container image to GitHub-hosted release
+surfaces. The container image is published to GitHub Container Registry as
+`ghcr.io/<owner>/<repo>` for `linux/amd64` and `linux/arm64`, with tags for the
+full version, `vMAJOR.MINOR`, `vMAJOR`, and `latest`.
 
 ## Examples
 
