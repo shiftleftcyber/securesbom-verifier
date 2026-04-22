@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/shiftleftcyber/securesbom-verifier/application"
+	securesbomverifier "github.com/shiftleftcyber/securesbom-verifier"
 )
 
 func main() {
@@ -21,7 +21,7 @@ func main() {
 	fmt.Printf("verification result: %+v\n", result)
 }
 
-func verifyExample(sbomPath, publicKeyPath string) (*application.VerificationResult, error) {
+func verifyExample(sbomPath, publicKeyPath string) (*securesbomverifier.VerificationResult, error) {
 	sbom, err := os.ReadFile(sbomPath)
 	if err != nil {
 		return nil, fmt.Errorf("read sbom: %w", err)
@@ -32,8 +32,8 @@ func verifyExample(sbomPath, publicKeyPath string) (*application.VerificationRes
 		return nil, fmt.Errorf("read public key: %w", err)
 	}
 
-	app := application.NewVerifierApp()
-	result, err := app.VerifyCycloneDXEmbeddedVersioned(sbom, string(pub), application.VerificationV2)
+	verifier := securesbomverifier.NewVerifier()
+	result, err := verifier.VerifyCycloneDXEmbeddedVersioned(sbom, string(pub), securesbomverifier.VerificationV2)
 	if err != nil {
 		return nil, fmt.Errorf("verify: %w", err)
 	}

@@ -40,6 +40,76 @@ make test
 make build-cli
 ```
 
+## Library Usage
+
+Import the module root directly:
+
+```go
+import securesbomverifier "github.com/shiftleftcyber/securesbom-verifier"
+```
+
+For CycloneDX embedded signatures:
+
+```go
+verifier := securesbomverifier.NewVerifier()
+
+result, err := verifier.VerifyCycloneDXEmbeddedVersioned(
+  signedSBOM,
+  string(publicKeyPEM),
+  securesbomverifier.VerificationV2,
+)
+```
+
+For SPDX detached signatures:
+
+```go
+verifier := securesbomverifier.NewVerifier()
+
+result, err := verifier.VerifySPDXDetachedVersioned(
+  spdxSBOM,
+  signatureB64,
+  string(publicKeyPEM),
+  securesbomverifier.VerificationV2,
+)
+if err != nil {
+  if errors.Is(err, securesbomverifier.ErrSignatureFail) {
+    // Signature did not verify.
+  }
+}
+```
+
+For digest verification, the current library API is exposed through the lower-level
+`services/digest` package rather than the root wrapper:
+
+```go
+import (
+  digestsigning "github.com/shiftleftcyber/securesbom-verifier/services/digest"
+  "github.com/shiftleftcyber/securesbom-verifier/verificationkey"
+)
+
+validated, err := digestsigning.NewValidator().ValidateVerifyDigestRequest(
+  digestsigning.VerifyDigestInput{
+    KeyID:         "offline",
+    HashAlgorithm: "sha256",
+    Digest:        digestB64,
+    Signature:     signatureB64,
+  },
+)
+if err != nil {
+  return err
+}
+
+err = digestsigning.NewCryptoVerifier().Verify(
+  &verificationkey.KeyInfo{
+    KeyID:     "offline",
+    Algorithm: "ES256",
+    PublicKey: string(publicKeyPEM),
+  },
+  validated.Digest,
+  validated.Signature,
+)
+```
+
 ## Build Note
 
 This project currently relies on `GOEXPERIMENT=jsonv2`, matching the behavior
@@ -110,8 +180,10 @@ CLI archives and a checksum file to the GitHub release.
 ## Examples
 
 See [examples/library/main.go](examples/library/main.go) for a minimal embedding
-example from another Go service, and [MIGRATION.md](MIGRATION.md) for a suggested
-next-step extraction plan from `sbom-signing-api`.
+example for CycloneDX verification, [examples/spdx-detached/main.go](examples/spdx-detached/main.go)
+for SPDX detached verification, [examples/digest/main.go](examples/digest/main.go)
+for digest verification, and [MIGRATION.md](MIGRATION.md) for a suggested next-step
+extraction plan from `sbom-signing-api`.
 
-The example program expects you to provide a signed SBOM path and a public key
-path at runtime.
+The example programs expect you to provide signed content, signatures, and/or a
+public key path at runtime depending on the verification mode.

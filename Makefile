@@ -2,12 +2,13 @@ BINARY_NAME ?= sbom-offline-verification
 GOCACHE ?= $(CURDIR)/.gocache
 GOMODCACHE ?= $(GOCACHE)/pkg/mod
 GOEXPERIMENT ?= jsonv2
-GOFILES := $(shell find . -name "*.go")
+GOFILES := $(shell find . \( -path './.git' -o -path './.gocache' -o -path './dist' -o -path './vendor' \) -prune -o -type f -name "*.go" -print)
 GOFMT ?= gofmt "-s"
 DIST_DIR ?= dist
 IMAGE_NAME ?= secure-sbom-verification-cli
 IMAGE_TAG ?= dev
 GOVULNCHECK_SCAN ?= package
+GOLANGCI_LINT ?= golangci-lint
 
 .PHONY: test coverage build-cli docker-build tidy vulncheck goreleaser-dryrun clean
 
@@ -58,4 +59,4 @@ fmt-check:
 
 .PHONY: lint
 lint:
-	@DOCKER run --rm -v $(shell pwd):/app -w /app --env GOEXPERIMENT=jsonv2 golangci/golangci-lint:v2.8.0-alpine golangci-lint run ./...
+	@docker run --rm -v $(shell pwd):/app -w /app --env GOEXPERIMENT=jsonv2 golangci/golangci-lint:v2.8.0-alpine $(GOLANGCI_LINT) run ./...
