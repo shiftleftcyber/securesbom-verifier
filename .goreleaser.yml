@@ -21,3 +21,69 @@ archives:
 
 checksum:
   name_template: checksums.txt
+
+dockers:
+  - id: cli-amd64
+    ids:
+      - sbom-offline-verification
+    goos: linux
+    goarch: amd64
+    image_templates:
+      - "{{ .Env.IMAGE }}:{{ .Tag }}-amd64"
+      - "{{ .Env.IMAGE }}:v{{ .Major }}-amd64"
+      - "{{ .Env.IMAGE }}:v{{ .Major }}.{{ .Minor }}-amd64"
+      - "{{ .Env.IMAGE }}:latest-amd64"
+    dockerfile: Dockerfile.goreleaser
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{ .Date }}"
+      - "--label=org.opencontainers.image.description=Secure SBOM verification CLI"
+      - "--label=org.opencontainers.image.name={{ .ProjectName }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.source={{ .GitURL }}"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+
+  - id: cli-arm64
+    ids:
+      - sbom-offline-verification
+    goos: linux
+    goarch: arm64
+    image_templates:
+      - "{{ .Env.IMAGE }}:{{ .Tag }}-arm64"
+      - "{{ .Env.IMAGE }}:v{{ .Major }}-arm64"
+      - "{{ .Env.IMAGE }}:v{{ .Major }}.{{ .Minor }}-arm64"
+      - "{{ .Env.IMAGE }}:latest-arm64"
+    dockerfile: Dockerfile.goreleaser
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{ .Date }}"
+      - "--label=org.opencontainers.image.description=Secure SBOM verification CLI"
+      - "--label=org.opencontainers.image.name={{ .ProjectName }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.source={{ .GitURL }}"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+
+docker_manifests:
+  - name_template: "{{ .Env.IMAGE }}:{{ .Tag }}"
+    image_templates:
+      - "{{ .Env.IMAGE }}:{{ .Tag }}-amd64"
+      - "{{ .Env.IMAGE }}:{{ .Tag }}-arm64"
+
+  - name_template: "{{ .Env.IMAGE }}:v{{ .Major }}.{{ .Minor }}"
+    image_templates:
+      - "{{ .Env.IMAGE }}:v{{ .Major }}.{{ .Minor }}-amd64"
+      - "{{ .Env.IMAGE }}:v{{ .Major }}.{{ .Minor }}-arm64"
+
+  - name_template: "{{ .Env.IMAGE }}:v{{ .Major }}"
+    image_templates:
+      - "{{ .Env.IMAGE }}:v{{ .Major }}-amd64"
+      - "{{ .Env.IMAGE }}:v{{ .Major }}-arm64"
+
+  - name_template: "{{ .Env.IMAGE }}:latest"
+    image_templates:
+      - "{{ .Env.IMAGE }}:latest-amd64"
+      - "{{ .Env.IMAGE }}:latest-arm64"
