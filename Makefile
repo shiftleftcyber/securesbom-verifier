@@ -7,10 +7,11 @@ GOFMT ?= gofmt "-s"
 DIST_DIR ?= dist
 IMAGE_NAME ?= secure-sbom-verification-cli
 IMAGE_TAG ?= dev
+IMAGE ?= ghcr.io/shiftleftcyber/securesbom-verifier
 GOVULNCHECK_SCAN ?= package
 GOLANGCI_LINT ?= golangci-lint
 
-.PHONY: test coverage build-cli docker-build tidy vulncheck goreleaser-dryrun clean
+.PHONY: test coverage build-cli docker-build tidy vulncheck goreleaser-dryrun goreleaser-dryrun-docker clean
 
 test:
 	mkdir -p $(GOCACHE)
@@ -22,7 +23,11 @@ build-cli:
 
 goreleaser-dryrun:
 	mkdir -p $(GOCACHE)
-	GOEXPERIMENT=$(GOEXPERIMENT) GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) goreleaser release --snapshot --clean
+	GOEXPERIMENT=$(GOEXPERIMENT) GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) IMAGE=$(IMAGE) goreleaser release --snapshot --clean --skip=docker
+
+goreleaser-dryrun-docker:
+	mkdir -p $(GOCACHE)
+	GOEXPERIMENT=$(GOEXPERIMENT) GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) IMAGE=$(IMAGE) goreleaser release --snapshot --clean
 
 coverage:
 	mkdir -p $(GOCACHE)
