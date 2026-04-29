@@ -129,10 +129,10 @@ func (v *VerifierApp) verifyCanonicalJSON(
 
 	valid, err := verifier.VerifyWithPublicKey(string(canonical), signatureValue, utils.NormalizePublicKeyPEM(publicKeyPEM))
 	if err != nil {
-		return nil, fmt.Errorf("signature verification failed: %w", err)
+		return nil, fmt.Errorf("%w: %v", ErrSignatureFail, err)
 	}
 	if !valid {
-		return nil, errors.New("signature is invalid")
+		return nil, ErrSignatureFail
 	}
 
 	return &VerificationResult{

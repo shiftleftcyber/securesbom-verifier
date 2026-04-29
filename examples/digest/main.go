@@ -5,8 +5,7 @@ import (
 	"log"
 	"os"
 
-	digestsigning "github.com/shiftleftcyber/securesbom-verifier/services/digest"
-	"github.com/shiftleftcyber/securesbom-verifier/verificationkey"
+	securesbomverifier "github.com/shiftleftcyber/securesbom-verifier"
 )
 
 func main() {
@@ -27,24 +26,18 @@ func verifyDigestExample(digestB64, signatureB64, publicKeyPath string) error {
 		return fmt.Errorf("read public key: %w", err)
 	}
 
-	validated, err := digestsigning.NewValidator().ValidateVerifyDigestRequest(digestsigning.VerifyDigestInput{
-		KeyID:         "offline",
-		HashAlgorithm: "sha256",
-		Digest:        digestB64,
-		Signature:     signatureB64,
-	})
-	if err != nil {
-		return fmt.Errorf("validate digest request: %w", err)
-	}
-
-	err = digestsigning.NewCryptoVerifier().Verify(
-		&verificationkey.KeyInfo{
+	_, err = securesbomverifier.NewVerifier().VerifyDigest(
+		securesbomverifier.VerifyDigestInput{
+			KeyID:         "offline",
+			HashAlgorithm: "sha256",
+			Digest:        digestB64,
+			Signature:     signatureB64,
+		},
+		securesbomverifier.VerificationKey{
 			KeyID:     "offline",
 			Algorithm: "ES256",
 			PublicKey: string(pub),
 		},
-		validated.Digest,
-		validated.Signature,
 	)
 	if err != nil {
 		return fmt.Errorf("verify digest: %w", err)
