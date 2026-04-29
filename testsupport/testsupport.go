@@ -17,6 +17,40 @@ import (
 	sbomsvc "github.com/shiftleftcyber/securesbom-verifier/services/sbom"
 )
 
+type ContractFixtures struct {
+	CycloneDXEmbeddedValid   SignedSBOMFixture
+	CycloneDXEmbeddedInvalid SignedSBOMFixture
+	SPDXDetachedValid        DetachedSBOMFixture
+	SPDXDetachedInvalid      DetachedSBOMFixture
+	DigestValid              DigestFixture
+	DigestInvalid            DigestFixture
+}
+
+type SignedSBOMFixture struct {
+	SBOM         []byte
+	PublicKeyPEM string
+	Version      int
+	WantVerified bool
+}
+
+type DetachedSBOMFixture struct {
+	SBOM         []byte
+	SignatureB64 string
+	PublicKeyPEM string
+	Version      int
+	WantVerified bool
+}
+
+type DigestFixture struct {
+	KeyID         string
+	HashAlgorithm string
+	DigestB64     string
+	SignatureB64  string
+	PublicKeyPEM  string
+	Algorithm     string
+	WantVerified  bool
+}
+
 func FixtureBytes(t *testing.T, name string) []byte {
 	t.Helper()
 
@@ -184,4 +218,102 @@ func SignedSPDXDetachedV2(t *testing.T) ([]byte, string, string) {
 	}
 
 	return sbom, publicKeyPEM, SignMessageB64(t, privKey, canonical)
+}
+
+func NewContractFixtures(t *testing.T) ContractFixtures {
+	t.Helper()
+
+	cdxValid, cdxPublicKey := SignedCycloneDXV2(t, "ES256")
+	cdxInvalid := corruptCycloneDXEmbeddedSignature(t, cdxValid)
+
+	spdxSBOM, spdxPublicKey, spdxSignature := SignedSPDXDetachedV2(t)
+	spdxInvalidSignature := corruptBase64Signature(spdxSignature)
+
+	digestPrivKey, digestPublicKey := GenerateKeyPair(t)
+	digest := sha256.Sum256([]byte("securesbom-verifier contract digest fixture"))
+	digestSignature := SignDigestASN1(t, digestPrivKey, digest[:])
+	invalidDigest := digest
+	invalidDigest[0] ^= 0xff
+
+	return ContractFixtures{
+		CycloneDXEmbeddedValid: SignedSBOMFixture{
+			SBOM:         cdxValid,
+			PublicKeyPEM: cdxPublicKey,
+			Version:      2,
+			WantVerified: true,
+		},
+		CycloneDXEmbeddedInvalid: SignedSBOMFixture{
+			SBOM:         cdxInvalid,
+			PublicKeyPEM: cdxPublicKey,
+			Version:      2,
+			WantVerified: false,
+		},
+		SPDXDetachedValid: DetachedSBOMFixture{
+			SBOM:         spdxSBOM,
+			SignatureB64: spdxSignature,
+			PublicKeyPEM: spdxPublicKey,
+			Version:      2,
+			WantVerified: true,
+		},
+		SPDXDetachedInvalid: DetachedSBOMFixture{
+			SBOM:         spdxSBOM,
+			SignatureB64: spdxInvalidSignature,
+			PublicKeyPEM: spdxPublicKey,
+			Version:      2,
+			WantVerified: false,
+		},
+		DigestValid: DigestFixture{
+			KeyID:         "contract-digest-key",
+			HashAlgorithm: "sha256",
+			DigestB64:     base64.StdEncoding.EncodeToString(digest[:]),
+			SignatureB64:  base64.StdEncoding.EncodeToString(digestSignature),
+			PublicKeyPEM:  digestPublicKey,
+			Algorithm:     "ES256",
+			WantVerified:  true,
+		},
+		DigestInvalid: DigestFixture{
+			KeyID:         "contract-digest-key",
+			HashAlgorithm: "sha256",
+			DigestB64:     base64.StdEncoding.EncodeToString(invalidDigest[:]),
+			SignatureB64:  base64.StdEncoding.EncodeToString(digestSignature),
+			PublicKeyPEM:  digestPublicKey,
+			Algorithm:     "ES256",
+			WantVerified:  false,
+		},
+	}
+}
+
+func corruptBase64Signature(signature string) string {
+	decoded, err := base64.StdEncoding.DecodeString(signature)
+	if err != nil || len(decoded) == 0 {
+		return signature
+	}
+	decoded[len(decoded)-1] ^= 0xff
+	return base64.StdEncoding.EncodeToString(decoded)
+}
+
+func corruptCycloneDXEmbeddedSignature(t *testing.T, signed []byte) []byte {
+	t.Helper()
+
+	var obj map[string]any
+	if err := json.Unmarshal(signed, &obj); err != nil {
+		t.Fatalf("unmarshal signed CycloneDX fixture: %v", err)
+	}
+
+	sigObj, ok := obj["signature"].(map[string]any)
+	if !ok {
+		t.Fatal("signed CycloneDX fixture missing signature object")
+	}
+
+	signature, ok := sigObj["value"].(string)
+	if !ok {
+		t.Fatal("signed CycloneDX fixture missing signature value")
+	}
+	sigObj["value"] = corruptBase64Signature(signature)
+
+	corrupted, err := json.Marshal(obj)
+	if err != nil {
+		t.Fatalf("marshal corrupted CycloneDX fixture: %v", err)
+	}
+	return corrupted
 }

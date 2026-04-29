@@ -42,7 +42,7 @@ func (v *VerifierApp) verifySPDXDetached(
 
 	valid, err := verifier.VerifyWithPublicKey(string(canonicalSBOM), signatureB64, utils.NormalizePublicKeyPEM(publicKeyPEM))
 	if err != nil {
-		return nil, fmt.Errorf("signature verification failed: %w", err)
+		return nil, fmt.Errorf("%w: %v", ErrSignatureFail, err)
 	}
 	if !valid {
 		return nil, ErrSignatureFail

@@ -4,7 +4,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/x509"
 	"encoding/pem"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -19,40 +18,40 @@ func NewCryptoVerifier() Verifier {
 
 func (v *cryptoVerifier) Verify(keyMeta *verificationkey.KeyInfo, digest []byte, signature []byte) error {
 	if keyMeta == nil {
-		return errors.New("key metadata is required")
+		return fmt.Errorf("%w: key metadata is required", ErrInvalidKey)
 	}
 
 	publicKeyPEM := strings.TrimSpace(keyMeta.PublicKey)
 	if publicKeyPEM == "" {
-		return errors.New("public key not found for key")
+		return fmt.Errorf("%w: public key not found for key", ErrInvalidKey)
 	}
 
 	switch strings.ToUpper(strings.TrimSpace(keyMeta.Algorithm)) {
 	case "ES256", "ES384", "ES512":
 		return verifyECDSADigest(publicKeyPEM, digest, signature)
 	default:
-		return fmt.Errorf("unsupported signature algorithm: %s", keyMeta.Algorithm)
+		return fmt.Errorf("%w: unsupported signature algorithm: %s", ErrInvalidKey, keyMeta.Algorithm)
 	}
 }
 
 func verifyECDSADigest(publicKeyPEM string, digest []byte, signature []byte) error {
 	block, _ := pem.Decode([]byte(publicKeyPEM))
 	if block == nil {
-		return errors.New("failed to decode PEM block")
+		return fmt.Errorf("%w: failed to decode PEM block", ErrInvalidKey)
 	}
 
 	pubKeyInterface, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
-		return fmt.Errorf("failed to parse public key: %w", err)
+		return fmt.Errorf("%w: failed to parse public key: %v", ErrInvalidKey, err)
 	}
 
 	pubKey, ok := pubKeyInterface.(*ecdsa.PublicKey)
 	if !ok {
-		return errors.New("not an ECDSA public key")
+		return fmt.Errorf("%w: not an ECDSA public key", ErrInvalidKey)
 	}
 
 	if !ecdsa.VerifyASN1(pubKey, digest, signature) {
-		return errors.New("signature is invalid")
+		return fmt.Errorf("%w: signature is invalid", ErrVerificationFailed)
 	}
 
 	return nil

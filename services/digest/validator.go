@@ -21,6 +21,8 @@ var (
 	ErrInvalidDigest        = errors.New("invalid digest")
 	ErrInvalidKeyID         = errors.New("invalid key_id")
 	ErrInvalidSignature     = errors.New("invalid signature")
+	ErrInvalidKey           = errors.New("invalid verification key")
+	ErrVerificationFailed   = errors.New("verification failed")
 )
 
 type ValidatedDigest struct {
