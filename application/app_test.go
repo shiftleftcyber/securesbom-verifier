@@ -81,18 +81,6 @@ func TestVerifyCycloneDXEmbeddedVersioned_FactoryError(t *testing.T) {
 	}
 }
 
-func TestVerifyAIBOMEmbeddedVersioned_V1(t *testing.T) {
-	signed, publicKey := testsupport.SignedAIBOMV1(t, "ES256")
-
-	result, err := NewVerifierApp().VerifyAIBOMEmbeddedVersioned(signed, publicKey, VerificationV1)
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
-	}
-	if result.Message != "AI-BOM signature is valid" {
-		t.Fatalf("unexpected message: %s", result.Message)
-	}
-}
-
 func TestVerifyAIBOMEmbeddedVersioned_V2(t *testing.T) {
 	signed, publicKey := testsupport.SignedAIBOMV2(t, "ES256")
 
@@ -102,6 +90,15 @@ func TestVerifyAIBOMEmbeddedVersioned_V2(t *testing.T) {
 	}
 	if result.Algorithm != "ecdsa" {
 		t.Fatalf("unexpected algorithm: %s", result.Algorithm)
+	}
+}
+
+func TestVerifyAIBOMEmbeddedVersioned_V1Unsupported(t *testing.T) {
+	signed, publicKey := testsupport.SignedAIBOMV2(t, "ES256")
+
+	_, err := NewVerifierApp().VerifyAIBOMEmbeddedVersioned(signed, publicKey, VerificationV1)
+	if err == nil || !strings.Contains(err.Error(), "requires verification version v2") {
+		t.Fatalf("expected v2 requirement error, got %v", err)
 	}
 }
 

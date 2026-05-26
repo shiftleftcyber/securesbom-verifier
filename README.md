@@ -83,6 +83,8 @@ result, err := verifier.VerifyAIBOMEmbeddedVersioned(
 )
 ```
 
+AI-BOM verification is supported only with `VerificationV2`.
+
 When key metadata is available, use the key-based root API:
 
 ```go
@@ -220,6 +222,9 @@ Use `VerificationV2` for new integrations.
   signing flows.
 - `VerificationV2` uses the newer canonicalization behavior and is the default
   recommendation for new signatures, including AI-BOM embedded signatures.
+
+AI-BOM embedded verification is only available with `VerificationV2`; the V1
+verification behavior remains limited to the existing CycloneDX and SPDX flows.
 
 Migration note: keep verifying historical artifacts with the version used when
 they were signed. Sign new CycloneDX embedded, AI-BOM embedded, and SPDX

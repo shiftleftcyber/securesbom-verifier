@@ -240,42 +240,6 @@ func SignedAIBOMV2(t *testing.T, algorithm string) ([]byte, string) {
 	return signed, publicKeyPEM
 }
 
-func SignedAIBOMV1(t *testing.T, algorithm string) ([]byte, string) {
-	t.Helper()
-
-	sbom := FixtureBytes(t, "aibom.json")
-	privKey, publicKeyPEM := GenerateKeyPair(t)
-
-	var obj map[string]any
-	if err := json.Unmarshal(sbom, &obj); err != nil {
-		t.Fatalf("unmarshal AI-BOM fixture: %v", err)
-	}
-
-	metadata, ok := obj["metadata"].(map[string]any)
-	if !ok {
-		t.Fatal("AI-BOM fixture missing metadata object")
-	}
-
-	delete(metadata, "sbomAuthorSignature")
-	canonical, err := json.Marshal(obj)
-	if err != nil {
-		t.Fatalf("canonicalize AI-BOM v1: %v", err)
-	}
-
-	signature := SignMessageB64(t, privKey, canonical)
-	metadata["sbomAuthorSignature"] = map[string]any{
-		"algorithm": algorithm,
-		"value":     signature,
-	}
-
-	signed, err := json.Marshal(obj)
-	if err != nil {
-		t.Fatalf("marshal signed AI-BOM v1: %v", err)
-	}
-
-	return signed, publicKeyPEM
-}
-
 func SignedSPDXDetachedV1(t *testing.T) ([]byte, string, string) {
 	t.Helper()
 

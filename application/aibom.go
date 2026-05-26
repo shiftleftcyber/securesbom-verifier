@@ -15,25 +15,10 @@ func (v *VerifierApp) VerifyAIBOMEmbeddedVersioned(
 	publicKeyPEM string,
 	version VerificationVersion,
 ) (*VerificationResult, error) {
-	switch version {
-	case VerificationV2:
-		return v.VerifyAIBOMEmbeddedV2(signedSBOM, publicKeyPEM)
-	default:
-		return v.VerifyAIBOMEmbeddedV1(signedSBOM, publicKeyPEM)
+	if version != VerificationV2 {
+		return nil, errors.New("AI-BOM verification requires verification version v2")
 	}
-}
-
-func (v *VerifierApp) VerifyAIBOMEmbeddedV1(signedSBOM []byte, publicKeyPEM string) (*VerificationResult, error) {
-	if err := validateSBOM(signedSBOM, "AI-BOM"); err != nil {
-		return nil, err
-	}
-
-	canonical, signatureValue, algorithm, err := canonicalizeEmbeddedAIBOMForV1(signedSBOM)
-	if err != nil {
-		return nil, err
-	}
-
-	return v.verifyCanonicalJSON(canonical, signatureValue, publicKeyPEM, algorithm, "AI-BOM signature is valid", "ecdsa")
+	return v.VerifyAIBOMEmbeddedV2(signedSBOM, publicKeyPEM)
 }
 
 func (v *VerifierApp) VerifyAIBOMEmbeddedV2(signedSBOM []byte, publicKeyPEM string) (*VerificationResult, error) {
@@ -47,28 +32,6 @@ func (v *VerifierApp) VerifyAIBOMEmbeddedV2(signedSBOM []byte, publicKeyPEM stri
 	}
 
 	return v.verifyCanonicalJSON(canonical, signatureValue, publicKeyPEM, algorithm, "AI-BOM signature is valid", "ecdsa")
-}
-
-func canonicalizeEmbeddedAIBOMForV1(signedSBOM []byte) ([]byte, string, string, error) {
-	obj, signatureObj, err := extractAIBOMSignatureObject(signedSBOM)
-	if err != nil {
-		return nil, "", "", err
-	}
-
-	signatureValue, algorithm, err := decodeEmbeddedSignatureFields(signatureObj)
-	if err != nil {
-		return nil, "", "", err
-	}
-
-	metadata := obj["metadata"].(map[string]any)
-	delete(metadata, aiBOMSignatureProperty)
-
-	canonical, err := json.Marshal(obj)
-	if err != nil {
-		return nil, "", "", fmt.Errorf("failed to serialize canonical AI-BOM: %w", err)
-	}
-
-	return canonical, signatureValue, algorithm, nil
 }
 
 func canonicalizeEmbeddedAIBOMForV2(signedSBOM []byte) ([]byte, string, string, error) {
