@@ -35,6 +35,29 @@ func TestCommandRun_CycloneDXSuccess(t *testing.T) {
 	}
 }
 
+func TestCommandRun_AIBOMSuccess(t *testing.T) {
+	signed, publicKey := testsupport.SignedAIBOMV2(t, "ES256")
+	tempDir := t.TempDir()
+	sbomPath := filepath.Join(tempDir, "signed.ai-bom.json")
+	pubPath := filepath.Join(tempDir, "public.pem")
+
+	if err := os.WriteFile(sbomPath, signed, 0o600); err != nil {
+		t.Fatalf("write AI-BOM: %v", err)
+	}
+	if err := os.WriteFile(pubPath, []byte(publicKey), 0o600); err != nil {
+		t.Fatalf("write public key: %v", err)
+	}
+
+	var stdout, stderr bytes.Buffer
+	exitCode := newCommand(&stdout, &stderr).run([]string{"--sbom", sbomPath, "--pubkey", pubPath, "--verification-version", "v2"})
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d stderr=%s", exitCode, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "ai-sbom") {
+		t.Fatalf("expected AI-SBOM output, got %s", stdout.String())
+	}
+}
+
 func TestCommandRun_DigestSuccess(t *testing.T) {
 	privKey, publicKey := testsupport.GenerateKeyPair(t)
 	digest := sha256.Sum256([]byte("hello world"))

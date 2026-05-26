@@ -172,6 +172,8 @@ func (c *command) verifySBOM(app *application.VerifierApp, sbom []byte, public s
 	switch strings.ToLower(result.SBOMType) {
 	case "cyclonedx":
 		return c.verifyCycloneDX(app, sbom, public, opts.verificationVersion)
+	case "ai-sbom":
+		return c.verifyAIBOM(app, sbom, public, opts.verificationVersion)
 	case "spdx":
 		return c.verifySPDX(app, sbom, opts.signature, public, opts.verificationVersion)
 	default:
@@ -193,6 +195,20 @@ func (c *command) verifyCycloneDX(
 		return nil, "", err
 	}
 	return result, "CycloneDX", nil
+}
+
+func (c *command) verifyAIBOM(
+	app *application.VerifierApp,
+	sbom []byte,
+	public string,
+	version application.VerificationVersion,
+) (*application.VerificationResult, string, error) {
+	result, err := app.VerifyAIBOMEmbeddedVersioned(sbom, public, version)
+	if err != nil {
+		printResult(c.stdout, false, "SBOM", "SBOM Type", "AI-SBOM", "", "", err)
+		return nil, "", err
+	}
+	return result, "AI-SBOM", nil
 }
 
 func (c *command) verifySPDX(

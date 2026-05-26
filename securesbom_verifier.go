@@ -68,6 +68,30 @@ func (v *Verifier) VerifyCycloneDXEmbeddedWithKeyVersioned(
 	return result, nil
 }
 
+func (v *Verifier) VerifyAIBOMEmbeddedVersioned(
+	signedSBOM []byte,
+	publicKeyPEM string,
+	version VerificationVersion,
+) (*VerificationResult, error) {
+	return v.app.VerifyAIBOMEmbeddedVersioned(signedSBOM, publicKeyPEM, version)
+}
+
+func (v *Verifier) VerifyAIBOMEmbeddedWithKeyVersioned(
+	signedSBOM []byte,
+	key VerificationKey,
+	version VerificationVersion,
+) (*VerificationResult, error) {
+	result, err := v.app.VerifyAIBOMEmbeddedVersioned(signedSBOM, key.PublicKey, version)
+	if err != nil {
+		return nil, err
+	}
+	result.KeyID = key.KeyID
+	if key.Algorithm != "" {
+		result.Algorithm = key.Algorithm
+	}
+	return result, nil
+}
+
 func (v *Verifier) VerifySPDXDetachedVersioned(
 	sbom []byte,
 	signatureB64 string,

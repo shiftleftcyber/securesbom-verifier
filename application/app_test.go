@@ -81,6 +81,80 @@ func TestVerifyCycloneDXEmbeddedVersioned_FactoryError(t *testing.T) {
 	}
 }
 
+func TestVerifyAIBOMEmbeddedVersioned_V1(t *testing.T) {
+	signed, publicKey := testsupport.SignedAIBOMV1(t, "ES256")
+
+	result, err := NewVerifierApp().VerifyAIBOMEmbeddedVersioned(signed, publicKey, VerificationV1)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if result.Message != "AI-BOM signature is valid" {
+		t.Fatalf("unexpected message: %s", result.Message)
+	}
+}
+
+func TestVerifyAIBOMEmbeddedVersioned_V2(t *testing.T) {
+	signed, publicKey := testsupport.SignedAIBOMV2(t, "ES256")
+
+	result, err := NewVerifierApp().VerifyAIBOMEmbeddedVersioned(signed, publicKey, VerificationV2)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if result.Algorithm != "ecdsa" {
+		t.Fatalf("unexpected algorithm: %s", result.Algorithm)
+	}
+}
+
+func TestVerifyAIBOMEmbeddedVersioned_MissingPublicKey(t *testing.T) {
+	signed, _ := testsupport.SignedAIBOMV2(t, "ES256")
+
+	_, err := NewVerifierApp().VerifyAIBOMEmbeddedVersioned(signed, "", VerificationV2)
+	if err == nil || !strings.Contains(err.Error(), "public key is required") {
+		t.Fatalf("expected public key error, got %v", err)
+	}
+}
+
+func TestVerifyAIBOMEmbeddedVersioned_InvalidSignature(t *testing.T) {
+	signed, publicKey := testsupport.SignedAIBOMV2(t, "ES256")
+
+	var obj map[string]any
+	if err := json.Unmarshal(signed, &obj); err != nil {
+		t.Fatalf("unmarshal AI-BOM: %v", err)
+	}
+	obj["system"].(map[string]any)["systemProducer"] = "tampered"
+	tampered, err := json.Marshal(obj)
+	if err != nil {
+		t.Fatalf("marshal tampered AI-BOM: %v", err)
+	}
+
+	_, err = NewVerifierApp().VerifyAIBOMEmbeddedVersioned(tampered, publicKey, VerificationV2)
+	if !errors.Is(err, ErrSignatureFail) && (err == nil || !strings.Contains(err.Error(), "signature verification failed")) {
+		t.Fatalf("expected signature failure, got %v", err)
+	}
+}
+
+func TestCanonicalizeEmbeddedAIBOMForV2_InvalidCases(t *testing.T) {
+	_, _, _, err := canonicalizeEmbeddedAIBOMForV2([]byte(`{`))
+	if err == nil {
+		t.Fatal("expected invalid JSON error")
+	}
+
+	_, _, _, err = canonicalizeEmbeddedAIBOMForV2([]byte(`{"schemaVersion":"1.0.0"}`))
+	if err == nil || !strings.Contains(err.Error(), "metadata object is missing") {
+		t.Fatalf("expected missing metadata error, got %v", err)
+	}
+
+	_, _, _, err = canonicalizeEmbeddedAIBOMForV2([]byte(`{"metadata":"bad"}`))
+	if err == nil || !strings.Contains(err.Error(), "metadata must be an object") {
+		t.Fatalf("expected invalid metadata type error, got %v", err)
+	}
+
+	_, _, _, err = canonicalizeEmbeddedAIBOMForV2([]byte(`{"metadata":{"sbomAuthorSignature":"bad"}}`))
+	if err == nil || !strings.Contains(err.Error(), "sbomAuthorSignature must be an object") {
+		t.Fatalf("expected invalid signature type error, got %v", err)
+	}
+}
+
 func TestVerifySPDXDetachedVersioned_V1(t *testing.T) {
 	sbom, publicKey, signature := testsupport.SignedSPDXDetachedV1(t)
 

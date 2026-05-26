@@ -58,6 +58,29 @@ func TestVerifier_VerifyDigest_RootPackageAPI(t *testing.T) {
 	}
 }
 
+func TestVerifier_VerifyAIBOMEmbedded_RootPackageAPI(t *testing.T) {
+	signed, publicKey := testsupport.SignedAIBOMV2(t, "ES256")
+
+	result, err := NewVerifier().VerifyAIBOMEmbeddedWithKeyVersioned(
+		signed,
+		VerificationKey{
+			KeyID:     "ai-bom-test-key",
+			Algorithm: "ES256",
+			PublicKey: publicKey,
+		},
+		VerificationV2,
+	)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if result.Message != "AI-BOM signature is valid" {
+		t.Fatalf("unexpected message: %s", result.Message)
+	}
+	if result.KeyID != "ai-bom-test-key" {
+		t.Fatalf("unexpected key id: %s", result.KeyID)
+	}
+}
+
 func TestVerifier_VerifyDigest_StableErrors(t *testing.T) {
 	_, err := NewVerifier().VerifyDigest(
 		VerifyDigestInput{
@@ -128,6 +151,22 @@ func TestContractFixtures(t *testing.T) {
 		VerificationV2,
 	); !errors.Is(err, ErrSignatureFail) {
 		t.Fatalf("expected invalid CycloneDX fixture to fail signature verification, got %v", err)
+	}
+
+	if _, err := verifier.VerifyAIBOMEmbeddedVersioned(
+		fixtures.AIBOMEmbeddedValid.SBOM,
+		fixtures.AIBOMEmbeddedValid.PublicKeyPEM,
+		VerificationV2,
+	); err != nil {
+		t.Fatalf("valid AI-BOM contract fixture failed: %v", err)
+	}
+
+	if _, err := verifier.VerifyAIBOMEmbeddedVersioned(
+		fixtures.AIBOMEmbeddedInvalid.SBOM,
+		fixtures.AIBOMEmbeddedInvalid.PublicKeyPEM,
+		VerificationV2,
+	); !errors.Is(err, ErrSignatureFail) {
+		t.Fatalf("expected invalid AI-BOM fixture to fail signature verification, got %v", err)
 	}
 
 	if _, err := verifier.VerifySPDXDetachedVersioned(

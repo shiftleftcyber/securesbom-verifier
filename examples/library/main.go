@@ -40,3 +40,23 @@ func verifyExample(sbomPath, publicKeyPath string) (*securesbomverifier.Verifica
 
 	return result, nil
 }
+
+func verifyAIBOMExample(sbomPath, publicKeyPath string) (*securesbomverifier.VerificationResult, error) {
+	sbom, err := os.ReadFile(sbomPath)
+	if err != nil {
+		return nil, fmt.Errorf("read AI-BOM: %w", err)
+	}
+
+	pub, err := os.ReadFile(publicKeyPath)
+	if err != nil {
+		return nil, fmt.Errorf("read public key: %w", err)
+	}
+
+	verifier := securesbomverifier.NewVerifier()
+	result, err := verifier.VerifyAIBOMEmbeddedVersioned(sbom, string(pub), securesbomverifier.VerificationV2)
+	if err != nil {
+		return nil, fmt.Errorf("verify AI-BOM: %w", err)
+	}
+
+	return result, nil
+}

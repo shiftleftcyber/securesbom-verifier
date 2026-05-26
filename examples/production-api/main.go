@@ -67,6 +67,9 @@ func (s *apiServer) verify(w http.ResponseWriter, r *http.Request) {
 	case "cyclonedx":
 		result, err := s.verifier.VerifyCycloneDXEmbeddedWithKeyVersioned(req.SBOM, key, versionFromRequest(req.VerificationVersion))
 		writeVerificationResult(w, result, err)
+	case "ai-bom":
+		result, err := s.verifier.VerifyAIBOMEmbeddedWithKeyVersioned(req.SBOM, key, versionFromRequest(req.VerificationVersion))
+		writeVerificationResult(w, result, err)
 	case "spdx":
 		result, err := s.verifier.VerifySPDXDetachedWithKeyVersioned(req.SBOM, req.Signature, key, versionFromRequest(req.VerificationVersion))
 		writeVerificationResult(w, result, err)
