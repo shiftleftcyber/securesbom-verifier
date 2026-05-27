@@ -48,17 +48,7 @@ func decodeEmbeddedSignature(signatureJSON []byte) (string, string, error) {
 		return "", "", fmt.Errorf("malformed signature object: %w", err)
 	}
 
-	signatureValue, ok := sigFields["value"].(string)
-	if !ok || signatureValue == "" {
-		return "", "", errors.New("signature value missing or invalid")
-	}
-
-	algorithm, _ := sigFields["alg"].(string)
-	if algorithm == "" {
-		algorithm = "ES256"
-	}
-
-	return signatureValue, algorithm, nil
+	return decodeEmbeddedSignatureFields(sigFields)
 }
 
 func canonicalizeEmbeddedCycloneDXForV2(signedSBOM []byte) ([]byte, string, string, error) {

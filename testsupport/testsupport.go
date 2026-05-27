@@ -20,6 +20,8 @@ import (
 type ContractFixtures struct {
 	CycloneDXEmbeddedValid   SignedSBOMFixture
 	CycloneDXEmbeddedInvalid SignedSBOMFixture
+	AIBOMEmbeddedValid       SignedSBOMFixture
+	AIBOMEmbeddedInvalid     SignedSBOMFixture
 	SPDXDetachedValid        DetachedSBOMFixture
 	SPDXDetachedInvalid      DetachedSBOMFixture
 	DigestValid              DigestFixture
@@ -194,6 +196,50 @@ func SignedCycloneDXV2(t *testing.T, algorithm string) ([]byte, string) {
 	return signed, publicKeyPEM
 }
 
+func SignedAIBOMV2(t *testing.T, algorithm string) ([]byte, string) {
+	t.Helper()
+
+	sbom := FixtureBytes(t, "aibom.json")
+	privKey, publicKeyPEM := GenerateKeyPair(t)
+
+	var obj map[string]any
+	if err := json.Unmarshal(sbom, &obj); err != nil {
+		t.Fatalf("unmarshal AI-BOM fixture: %v", err)
+	}
+
+	metadata, ok := obj["metadata"].(map[string]any)
+	if !ok {
+		t.Fatal("AI-BOM fixture missing metadata object")
+	}
+
+	metadata["sbomAuthorSignature"] = map[string]any{
+		"algorithm": algorithm,
+	}
+
+	withoutValue, err := json.Marshal(obj)
+	if err != nil {
+		t.Fatalf("marshal AI-BOM v2 without value: %v", err)
+	}
+
+	canonical, err := sbomsvc.CanonicalizeForJSF(withoutValue)
+	if err != nil {
+		t.Fatalf("canonicalize AI-BOM v2: %v", err)
+	}
+
+	signature := SignMessageB64(t, privKey, canonical)
+	metadata["sbomAuthorSignature"] = map[string]any{
+		"algorithm": algorithm,
+		"value":     signature,
+	}
+
+	signed, err := json.Marshal(obj)
+	if err != nil {
+		t.Fatalf("marshal signed AI-BOM v2: %v", err)
+	}
+
+	return signed, publicKeyPEM
+}
+
 func SignedSPDXDetachedV1(t *testing.T) ([]byte, string, string) {
 	t.Helper()
 
@@ -225,6 +271,8 @@ func NewContractFixtures(t *testing.T) ContractFixtures {
 
 	cdxValid, cdxPublicKey := SignedCycloneDXV2(t, "ES256")
 	cdxInvalid := corruptCycloneDXEmbeddedSignature(t, cdxValid)
+	aiBOMValid, aiBOMPublicKey := SignedAIBOMV2(t, "ES256")
+	aiBOMInvalid := corruptAIBOMEmbeddedSignature(t, aiBOMValid)
 
 	spdxSBOM, spdxPublicKey, spdxSignature := SignedSPDXDetachedV2(t)
 	spdxInvalidSignature := corruptBase64Signature(spdxSignature)
@@ -245,6 +293,18 @@ func NewContractFixtures(t *testing.T) ContractFixtures {
 		CycloneDXEmbeddedInvalid: SignedSBOMFixture{
 			SBOM:         cdxInvalid,
 			PublicKeyPEM: cdxPublicKey,
+			Version:      2,
+			WantVerified: false,
+		},
+		AIBOMEmbeddedValid: SignedSBOMFixture{
+			SBOM:         aiBOMValid,
+			PublicKeyPEM: aiBOMPublicKey,
+			Version:      2,
+			WantVerified: true,
+		},
+		AIBOMEmbeddedInvalid: SignedSBOMFixture{
+			SBOM:         aiBOMInvalid,
+			PublicKeyPEM: aiBOMPublicKey,
 			Version:      2,
 			WantVerified: false,
 		},
@@ -314,6 +374,37 @@ func corruptCycloneDXEmbeddedSignature(t *testing.T, signed []byte) []byte {
 	corrupted, err := json.Marshal(obj)
 	if err != nil {
 		t.Fatalf("marshal corrupted CycloneDX fixture: %v", err)
+	}
+	return corrupted
+}
+
+func corruptAIBOMEmbeddedSignature(t *testing.T, signed []byte) []byte {
+	t.Helper()
+
+	var obj map[string]any
+	if err := json.Unmarshal(signed, &obj); err != nil {
+		t.Fatalf("unmarshal signed AI-BOM fixture: %v", err)
+	}
+
+	metadata, ok := obj["metadata"].(map[string]any)
+	if !ok {
+		t.Fatal("signed AI-BOM fixture missing metadata object")
+	}
+
+	sigObj, ok := metadata["sbomAuthorSignature"].(map[string]any)
+	if !ok {
+		t.Fatal("signed AI-BOM fixture missing signature object")
+	}
+
+	signature, ok := sigObj["value"].(string)
+	if !ok {
+		t.Fatal("signed AI-BOM fixture missing signature value")
+	}
+	sigObj["value"] = corruptBase64Signature(signature)
+
+	corrupted, err := json.Marshal(obj)
+	if err != nil {
+		t.Fatalf("marshal corrupted AI-BOM fixture: %v", err)
 	}
 	return corrupted
 }

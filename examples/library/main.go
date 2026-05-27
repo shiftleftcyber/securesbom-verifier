@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -33,10 +34,29 @@ func verifyExample(sbomPath, publicKeyPath string) (*securesbomverifier.Verifica
 	}
 
 	verifier := securesbomverifier.NewVerifier()
-	result, err := verifier.VerifyCycloneDXEmbeddedVersioned(sbom, string(pub), securesbomverifier.VerificationV2)
-	if err != nil {
-		return nil, fmt.Errorf("verify: %w", err)
+	if isAIBOM(sbom) {
+		result, err := verifier.VerifyAIBOMEmbeddedVersioned(sbom, string(pub), securesbomverifier.VerificationV2)
+		if err != nil {
+			return nil, fmt.Errorf("verify AI-BOM: %w", err)
+		}
+		return result, nil
 	}
 
+	result, err := verifier.VerifyCycloneDXEmbeddedVersioned(sbom, string(pub), securesbomverifier.VerificationV2)
+	if err != nil {
+		return nil, fmt.Errorf("verify CycloneDX: %w", err)
+	}
 	return result, nil
+}
+
+func isAIBOM(sbom []byte) bool {
+	var doc struct {
+		Metadata struct {
+			BOMFormat string `json:"bomFormat"`
+		} `json:"metadata"`
+	}
+	if err := json.Unmarshal(sbom, &doc); err != nil {
+		return false
+	}
+	return doc.Metadata.BOMFormat == "AI-SBOM"
 }

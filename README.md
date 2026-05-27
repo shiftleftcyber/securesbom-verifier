@@ -11,6 +11,7 @@ digests with public keys. It is designed to be reused by:
 ## What This Project Contains
 
 - CycloneDX embedded signature verification
+- AI-BOM embedded signature verification
 - SPDX detached signature verification
 - digest signature verification
 - JSON canonicalization helpers used during verification
@@ -63,6 +64,34 @@ result, err := verifier.VerifyCycloneDXEmbeddedWithKeyVersioned(
   signedSBOM,
   securesbomverifier.VerificationKey{
     KeyID:     "production-key-2026-04",
+    Algorithm: "ES256",
+    PublicKey: string(publicKeyPEM),
+  },
+  securesbomverifier.VerificationV2,
+)
+```
+
+For AI-BOM embedded signatures:
+
+```go
+verifier := securesbomverifier.NewVerifier()
+
+result, err := verifier.VerifyAIBOMEmbeddedVersioned(
+  signedAIBOM,
+  string(publicKeyPEM),
+  securesbomverifier.VerificationV2,
+)
+```
+
+AI-BOM verification is supported only with `VerificationV2`.
+
+When key metadata is available, use the key-based root API:
+
+```go
+result, err := verifier.VerifyAIBOMEmbeddedWithKeyVersioned(
+  signedAIBOM,
+  securesbomverifier.VerificationKey{
+    KeyID:     "production-ai-bom-key-2026-05",
     Algorithm: "ES256",
     PublicKey: string(publicKeyPEM),
   },
@@ -192,15 +221,20 @@ Use `VerificationV2` for new integrations.
   source service. It is useful when verifying signatures produced by older
   signing flows.
 - `VerificationV2` uses the newer canonicalization behavior and is the default
-  recommendation for new signatures.
+  recommendation for new signatures, including AI-BOM embedded signatures.
+
+AI-BOM embedded verification is only available with `VerificationV2`; the V1
+verification behavior remains limited to the existing CycloneDX and SPDX flows.
 
 Migration note: keep verifying historical artifacts with the version used when
-they were signed. Sign new CycloneDX embedded and SPDX detached artifacts with
-`VerificationV2`, then update callers to pass `securesbomverifier.VerificationV2`.
+they were signed. Sign new CycloneDX embedded, AI-BOM embedded, and SPDX
+detached artifacts with `VerificationV2`, then update callers to pass
+`securesbomverifier.VerificationV2`.
 
 ```go
 _, err = verifier.VerifyCycloneDXEmbeddedVersioned(signedSBOM, publicKeyPEM, securesbomverifier.VerificationV1)
 _, err = verifier.VerifyCycloneDXEmbeddedVersioned(signedSBOM, publicKeyPEM, securesbomverifier.VerificationV2)
+_, err = verifier.VerifyAIBOMEmbeddedVersioned(signedAIBOM, publicKeyPEM, securesbomverifier.VerificationV2)
 _, err = verifier.VerifySPDXDetachedVersioned(spdxSBOM, signatureB64, publicKeyPEM, securesbomverifier.VerificationV1)
 _, err = verifier.VerifySPDXDetachedVersioned(spdxSBOM, signatureB64, publicKeyPEM, securesbomverifier.VerificationV2)
 ```
@@ -221,9 +255,9 @@ tests:
 fixtures := testsupport.NewContractFixtures(t)
 ```
 
-The fixture set includes valid and invalid CycloneDX embedded signatures, SPDX
-detached signatures, and digest signatures, along with public keys and expected
-verification outcomes.
+The fixture set includes valid and invalid CycloneDX embedded signatures,
+AI-BOM embedded signatures, SPDX detached signatures, and digest signatures,
+along with public keys and expected verification outcomes.
 
 ## Build Note
 
@@ -265,6 +299,10 @@ GOEXPERIMENT=jsonv2 go run ./cmd/sbom-offline-verification \
   --sbom ./path/to/signed-sbom.json \
   --pubkey ./path/to/public.pem
 ```
+
+The same command verifies signed CycloneDX or signed AI-BOM files. The verifier
+detects AI-BOM files as `AI-SBOM` and verifies the embedded
+`metadata.sbomAuthorSignature` value with the supplied public key.
 
 For detached SPDX verification:
 

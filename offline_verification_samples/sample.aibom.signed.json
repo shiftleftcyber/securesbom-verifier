@@ -1,0 +1,293 @@
+{
+  "datasets": [
+    {
+      "datasetContent": {
+        "dataModalities": [
+          "text"
+        ],
+        "domain": "customer support",
+        "format": "JSON Lines"
+      },
+      "datasetDependencyRelationships": [
+        {
+          "relationship": "derived-from",
+          "source": "Contoso Support Instruction Dataset",
+          "target": "Contoso Support Knowledge Base"
+        }
+      ],
+      "datasetDescription": "Private fine-tuning dataset containing support questions and approved answers.",
+      "datasetHash": {
+        "algorithm": "sha-256",
+        "value": "a4f0c2d8f3e4b5c697887766554433221100ffeeddccbbaa9988776655443322"
+      },
+      "datasetIdentifiers": [
+        {
+          "type": "uri",
+          "value": "s3://contoso-ml-datasets/support-instructions/2026-04"
+        }
+      ],
+      "datasetLicense": {
+        "name": "Contoso Internal Use Only",
+        "url": "https://example.com/contoso/data-licenses/internal-use"
+      },
+      "datasetName": "Contoso Support Instruction Dataset",
+      "datasetProvenance": {
+        "collectionMethods": [
+          "internal export",
+          "manual curation"
+        ],
+        "creator": "Contoso Machine Learning Platform",
+        "origin": "Contoso support knowledge base and curated support tickets.",
+        "processingSteps": [
+          "PII redaction",
+          "deduplication",
+          "quality review"
+        ],
+        "syntheticDataMethods": "No synthetic records were included."
+      },
+      "datasetSensitivity": {
+        "containsCopyrightProtectedData": true,
+        "containsNationalSecurityData": false,
+        "containsPersonalData": false,
+        "containsSensitiveData": false,
+        "description": "Contains internal support text and product documentation after PII redaction."
+      },
+      "datasetStatisticalProperties": {
+        "medianCompletionTokens": 143,
+        "medianPromptTokens": 88,
+        "records": 185000
+      }
+    }
+  ],
+  "infrastructure": {
+    "infrastructureHardware": {
+      "description": "GPU inference nodes and load balancer appliance inventory.",
+      "hbomUrl": "https://example.com/contoso/hbom/customer-support-assistant"
+    },
+    "infrastructureSoftware": [
+      {
+        "name": "Kubernetes",
+        "supplier": "Cloud Native Computing Foundation",
+        "type": "runtime",
+        "version": "1.30.7"
+      },
+      {
+        "name": "NVIDIA CUDA",
+        "supplier": "NVIDIA",
+        "type": "runtime",
+        "version": "12.4"
+      }
+    ]
+  },
+  "kpis": {
+    "operationalPerformanceKpis": [
+      {
+        "measurementTimestamp": "2026-05-15T00:00:00Z",
+        "name": "p95 latency",
+        "unit": "milliseconds",
+        "value": 850
+      },
+      {
+        "measurementTimestamp": "2026-05-15T00:00:00Z",
+        "name": "monthly uptime",
+        "unit": "percent",
+        "value": 99.95
+      }
+    ],
+    "securityMetrics": [
+      {
+        "measurementTimestamp": "2026-05-15T00:00:00Z",
+        "name": "prompt injection block precision",
+        "unit": "ratio",
+        "value": 0.94
+      }
+    ]
+  },
+  "metadata": {
+    "bomFormat": "AI-SBOM",
+    "sbomAuthor": "Contoso Security Engineering",
+    "sbomAuthorSignature": {
+      "algorithm": "ES256",
+      "value": "MEQCICAvZyAkAfOhyEoKOLGbMOLp6PkC0C5BpMwV9NY7Dyi6AiBBA4cPwHUZ1F6JNNHi8lPyIyTIXtjr4J4FC0B14dbmaw",
+      "keyId": "b28a8abe-a794-4221-8e9c-f13c5fe39844",
+      "publicKey": {
+        "kty": "EC",
+        "crv": "P-256",
+        "x": "gyF2yWrfKgdMGM-l6IqU04xY6nRi3ltJCmZK1-q-K68",
+        "y": "FzjW3iOqvUQ9jePuzLUI3XndAhAUqn564oFzQCm3p5k"
+      }
+    },
+    "sbomDataFormatName": "AI SBOM JSON",
+    "sbomDataFormatVersion": "1.0.0",
+    "sbomDependencyRelationships": [
+      {
+        "relationship": "includes",
+        "source": "Contoso Customer Support Assistant",
+        "target": "Atlas Chat Small"
+      }
+    ],
+    "sbomGenerationContext": "after-build",
+    "sbomTimestamp": "2026-05-18T14:22:31Z",
+    "sbomToolName": "Contoso AI Inventory Builder",
+    "sbomToolVersion": "2.4.1",
+    "sbomVersion": "1.0.0"
+  },
+  "models": [
+    {
+      "modelDescription": {
+        "capabilities": "Instruction-following text generation for customer support workflows.",
+        "dependencies": [
+          "transformers",
+          "sentencepiece"
+        ],
+        "knownLimitations": "May produce incorrect answers when retrieval context is incomplete.",
+        "lineage": "Fine-tuned from Atlas Base Small 3.0 using support instruction examples."
+      },
+      "modelExternalReferences": [
+        {
+          "description": "Model card for Atlas Chat Small.",
+          "type": "model-card",
+          "url": "https://example.com/models/atlas-chat-small/model-card"
+        }
+      ],
+      "modelHashAlgorithm": "sha-256",
+      "modelHashValue": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "modelIdentifiers": [
+        {
+          "type": "purl",
+          "value": "pkg:huggingface/atlas-model-works/atlas-chat-small@3.2.0"
+        }
+      ],
+      "modelInputOutputProperties": {
+        "contextLength": 32768,
+        "inputModalities": [
+          "text"
+        ],
+        "inputPreprocessing": "atlas-bpe-v3 tokenizer with system prompt templating",
+        "outputModalities": [
+          "text"
+        ]
+      },
+      "modelLicense": {
+        "name": "Atlas Responsible AI License 1.0",
+        "openness": {
+          "openArchitecture": true,
+          "openData": false,
+          "openTraining": false,
+          "openWeights": false
+        },
+        "url": "https://example.com/licenses/atlas-rai-1.0"
+      },
+      "modelName": [
+        "Atlas Chat Small"
+      ],
+      "modelProducers": [
+        "Atlas Model Works"
+      ],
+      "modelProperties": {
+        "architecture": "decoder only transformer",
+        "hyperparameters": {
+          "maxTemperature": 0.7,
+          "topP": 0.95
+        },
+        "modelFamily": "parametric neural network",
+        "parameterCount": 7200000000
+      },
+      "modelTimestamp": "2026-04-20T12:00:00Z",
+      "modelTrainingProperties": {
+        "documentationUrl": "https://example.com/models/atlas-chat-small/model-card",
+        "learningType": "supervised fine tuning and direct preference optimization",
+        "trainingStages": [
+          "pre-training",
+          "instruction tuning",
+          "direct preference optimization"
+        ]
+      },
+      "modelVersion": "3.2.0"
+    }
+  ],
+  "schemaVersion": "1.0.0",
+  "security": {
+    "cybersecurityPolicyInformation": "https://example.com/.well-known/security.txt",
+    "securityCompliance": [
+      {
+        "name": "ISO/IEC 27001",
+        "referenceUrl": "https://example.com/contoso/certifications/iso-27001",
+        "status": "certified"
+      }
+    ],
+    "securityControls": [
+      {
+        "category": "ai-specific",
+        "description": "Blocks or routes prompts classified as prompt injection attempts.",
+        "name": "Prompt injection classifier",
+        "referenceUrl": "https://example.com/contoso/security/prompt-injection-controls"
+      },
+      {
+        "category": "general-cybersecurity",
+        "description": "All model invocation APIs require OAuth 2.0 client credentials.",
+        "name": "API authentication"
+      }
+    ],
+    "vulnerabilityReferencing": [
+      {
+        "description": "Security advisories for Contoso AI systems.",
+        "type": "security-advisories",
+        "url": "https://example.com/contoso/security/advisories"
+      }
+    ]
+  },
+  "system": {
+    "intendedApplicationArea": [
+      "customer support",
+      "near real time application"
+    ],
+    "systemComponents": [
+      {
+        "name": "Atlas Chat Small",
+        "supplier": "Atlas Model Works",
+        "type": "ai-model",
+        "version": "3.2.0"
+      },
+      {
+        "name": "Customer Knowledge Retrieval Service",
+        "supplier": "Contoso",
+        "type": "service",
+        "version": "1.8.3"
+      }
+    ],
+    "systemDataFlow": [
+      {
+        "description": "User message and session metadata are sent for retrieval augmented generation.",
+        "destination": "Customer Knowledge Retrieval Service",
+        "externalService": false,
+        "protocol": "HTTPS",
+        "source": "Support chat user interface"
+      },
+      {
+        "description": "Retrieved support snippets and the user prompt are sent to the model.",
+        "destination": "Atlas Chat Small",
+        "externalService": true,
+        "protocol": "HTTPS",
+        "source": "Customer Knowledge Retrieval Service"
+      }
+    ],
+    "systemDataUsage": "Prompts and retrieved snippets are used for response generation and abuse monitoring. Customer prompts are retained for 30 days and are not used to train model weights.",
+    "systemInputOutputProperties": {
+      "decisionImpactDocumentationUrl": "https://example.com/contoso/customer-support-assistant/decision-impact",
+      "inputModalities": [
+        "text"
+      ],
+      "inputPreprocessing": "Unicode normalization, profanity filter, prompt-injection classifier, and tokenizer atlas-bpe-v3.",
+      "outputModalities": [
+        "text"
+      ]
+    },
+    "systemName": [
+      "Contoso Customer Support Assistant"
+    ],
+    "systemProducer": "Contoso",
+    "systemTimestamp": "2026-05-17T09:00:00Z",
+    "systemVersion": "2026.05.1"
+  }
+}
