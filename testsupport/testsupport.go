@@ -160,8 +160,16 @@ func SignedCycloneDXV1(t *testing.T, algorithm string) ([]byte, string) {
 func SignedCycloneDXV2(t *testing.T, algorithm string) ([]byte, string) {
 	t.Helper()
 
-	sbom := FixtureBytes(t, "cyclonedx.json")
 	privKey, publicKeyPEM := GenerateKeyPair(t)
+	return SignedCycloneDXV2WithKey(t, privKey, algorithm), publicKeyPEM
+}
+
+// SignedCycloneDXV2WithKey signs the CycloneDX fixture with an embedded v2
+// signature made by privKey.
+func SignedCycloneDXV2WithKey(t *testing.T, privKey *ecdsa.PrivateKey, algorithm string) []byte {
+	t.Helper()
+
+	sbom := FixtureBytes(t, "cyclonedx.json")
 
 	var obj map[string]any
 	if err := json.Unmarshal(sbom, &obj); err != nil {
@@ -193,14 +201,22 @@ func SignedCycloneDXV2(t *testing.T, algorithm string) ([]byte, string) {
 		t.Fatalf("marshal signed CycloneDX v2: %v", err)
 	}
 
-	return signed, publicKeyPEM
+	return signed
 }
 
 func SignedAIBOMV2(t *testing.T, algorithm string) ([]byte, string) {
 	t.Helper()
 
-	sbom := FixtureBytes(t, "aibom.json")
 	privKey, publicKeyPEM := GenerateKeyPair(t)
+	return SignedAIBOMV2WithKey(t, privKey, algorithm), publicKeyPEM
+}
+
+// SignedAIBOMV2WithKey signs the AI-BOM fixture with an embedded v2 signature
+// made by privKey.
+func SignedAIBOMV2WithKey(t *testing.T, privKey *ecdsa.PrivateKey, algorithm string) []byte {
+	t.Helper()
+
+	sbom := FixtureBytes(t, "aibom.json")
 
 	var obj map[string]any
 	if err := json.Unmarshal(sbom, &obj); err != nil {
@@ -237,7 +253,7 @@ func SignedAIBOMV2(t *testing.T, algorithm string) ([]byte, string) {
 		t.Fatalf("marshal signed AI-BOM v2: %v", err)
 	}
 
-	return signed, publicKeyPEM
+	return signed
 }
 
 func SignedSPDXDetachedV1(t *testing.T) ([]byte, string, string) {

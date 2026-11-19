@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/shiftleftcyber/securesbom-verifier/application"
+	"github.com/shiftleftcyber/securesbom-verifier/attestation"
 	digestsigning "github.com/shiftleftcyber/securesbom-verifier/services/digest"
 	"github.com/shiftleftcyber/securesbom-verifier/verificationkey"
 )
@@ -15,6 +16,12 @@ type VerificationKey = verificationkey.KeyInfo
 type KeyInfo = verificationkey.KeyInfo
 
 type VerificationVersion = application.VerificationVersion
+
+// Attestation verification types. See the attestation package for the
+// signing profile itself.
+type AttestationInput = application.AttestationInput
+type AttestationResult = application.AttestationResult
+type AttestationSubject = attestation.Subject
 
 const (
 	VerificationV1 = application.VerificationV1
@@ -32,6 +39,16 @@ var (
 	ErrInvalidSignature     = digestsigning.ErrInvalidSignature
 	ErrInvalidKey           = digestsigning.ErrInvalidKey
 	ErrVerificationFailed   = digestsigning.ErrVerificationFailed
+
+	ErrAttestationInvalidEnvelope        = attestation.ErrInvalidEnvelope
+	ErrAttestationKeyMismatch            = attestation.ErrKeyMismatch
+	ErrAttestationSignatureInvalid       = attestation.ErrSignatureInvalid
+	ErrAttestationPayloadNotCanonical    = attestation.ErrPayloadNotCanonical
+	ErrAttestationInvalidStatement       = attestation.ErrInvalidStatement
+	ErrAttestationUnsupportedPredicate   = attestation.ErrUnsupportedPredicateType
+	ErrAttestationExpectedDigestRequired = attestation.ErrExpectedDigestRequired
+	ErrAttestationSubjectMismatch        = attestation.ErrSubjectMismatch
+	ErrAttestationPredicateSignature     = attestation.ErrPredicateSignatureInvalid
 )
 
 type Verifier struct {
@@ -142,4 +159,18 @@ func (v *Verifier) VerifyDigest(
 		Verified:         true,
 		Message:          "signature is valid",
 	}, nil
+}
+
+// VerifyAttestationWithKey verifies a SecureSBOM DSSE attestation against a
+// public key and the artifact digest the caller resolved independently.
+//
+// The outer signature, payload canonical form, Statement, predicate type and
+// subject match are all checked before the predicate is returned. A signature
+// embedded in the predicate is always verified; a detached one is verified
+// when supplied. Each failure wraps one of the ErrAttestation* errors.
+func (v *Verifier) VerifyAttestationWithKey(
+	input AttestationInput,
+	key VerificationKey,
+) (*AttestationResult, error) {
+	return v.app.VerifyAttestation(input, key)
 }
