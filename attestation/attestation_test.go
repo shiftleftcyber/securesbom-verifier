@@ -283,7 +283,7 @@ func TestVerifyEnvelopeAcceptsEachPredicateType(t *testing.T) {
 		{"cyclonedx", attestation.PredicateTypeCycloneDX, testsupport.FixtureBytes(t, "cyclonedx.json"), "CycloneDX"},
 		{"signed cyclonedx", attestation.PredicateTypeCycloneDX, testsupport.SignedCycloneDXV2WithKey(t, privKey, "ES256"), "CycloneDX"},
 		{"spdx", attestation.PredicateTypeSPDX, testsupport.FixtureBytes(t, "spdx.json"), "SPDX"},
-		{"ai-sbom", attestation.PredicateTypeAISBOM, testsupport.FixtureBytes(t, "aibom.json"), "AI-SBOM"},
+		{"ai-sbom", attestation.PredicateTypeAISBOM, testsupport.UnsignedAIBOM(t), "AI-SBOM"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

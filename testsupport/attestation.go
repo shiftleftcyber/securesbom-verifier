@@ -82,3 +82,25 @@ func EnvelopePayload(t *testing.T, envelope []byte) []byte {
 	}
 	return payload
 }
+
+// UnsignedAIBOM returns the AI-BOM fixture with its sample
+// metadata.sbomAuthorSignature removed.
+func UnsignedAIBOM(t *testing.T) []byte {
+	t.Helper()
+
+	var obj map[string]any
+	if err := json.Unmarshal(FixtureBytes(t, "aibom.json"), &obj); err != nil {
+		t.Fatalf("unmarshal AI-BOM fixture: %v", err)
+	}
+	metadata, ok := obj["metadata"].(map[string]any)
+	if !ok {
+		t.Fatal("AI-BOM fixture missing metadata object")
+	}
+	delete(metadata, "sbomAuthorSignature")
+
+	out, err := json.Marshal(obj)
+	if err != nil {
+		t.Fatalf("marshal unsigned AI-BOM: %v", err)
+	}
+	return out
+}

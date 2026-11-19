@@ -30,7 +30,7 @@ func TestVerifyAttestationPredicateSignatures(t *testing.T) {
 
 	cdx := testsupport.FixtureBytes(t, "cyclonedx.json")
 	spdx := testsupport.FixtureBytes(t, "spdx.json")
-	aiBOM := testsupport.FixtureBytes(t, "aibom.json")
+	aiBOM := testsupport.UnsignedAIBOM(t)
 	cdxSigned := testsupport.SignedCycloneDXV2WithKey(t, privKey, "ES256")
 	cdxSignedByOther := testsupport.SignedCycloneDXV2WithKey(t, otherKey, "ES256")
 	aiBOMSigned := testsupport.SignedAIBOMV2WithKey(t, privKey, "ES256")
