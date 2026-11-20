@@ -35,6 +35,8 @@ func newCommand(stdout, stderr io.Writer) *command {
 }
 
 type options struct {
+	attestationPath     string
+	expectedDigest      string
 	sbomPath            string
 	digestValue         string
 	pubKeyPath          string
@@ -69,6 +71,10 @@ func (c *command) execute(args []string) error {
 		return c.verifyDigest(opts, public)
 	}
 
+	if opts.attestationPath != "" {
+		return c.verifyAttestation(opts, public)
+	}
+
 	sbom, err := c.loadFileWithLabel(opts.sbomPath, "Failed to read SBOM")
 	if err != nil {
 		return err
@@ -89,6 +95,8 @@ func (c *command) parseArgs(args []string) (options, error) {
 	fs.SetOutput(c.stderr)
 
 	sbomPath := fs.String("sbom", "", "Path to the signed SBOM file")
+	attestationPath := fs.String("attestation", "", "Path to a DSSE attestation envelope to verify")
+	expectedDigest := fs.String("expected-digest", "", "SHA-256 of the artifact the attestation must cover (required with -attestation)")
 	digestValue := fs.String("digest", "", "Base64-encoded digest to verify")
 	pubKeyPath := fs.String("pubkey", "", "Path to the public key PEM file (required)")
 	signature := fs.String("signature", "", "Detached signature for SPDX or for digest verification")
@@ -106,10 +114,16 @@ func (c *command) parseArgs(args []string) (options, error) {
 		return options{}, errors.New("missing required -pubkey")
 	}
 
-	if strings.TrimSpace(*digestValue) == "" && strings.TrimSpace(*sbomPath) == "" {
-		_, _ = fmt.Fprintln(c.stderr, "Error: either -sbom or -digest is required")
+	if strings.TrimSpace(*digestValue) == "" && strings.TrimSpace(*sbomPath) == "" && strings.TrimSpace(*attestationPath) == "" {
+		_, _ = fmt.Fprintln(c.stderr, "Error: one of -sbom, -digest or -attestation is required")
 		fs.Usage()
-		return options{}, errors.New("either -sbom or -digest is required")
+		return options{}, errors.New("one of -sbom, -digest or -attestation is required")
+	}
+
+	if strings.TrimSpace(*attestationPath) != "" && strings.TrimSpace(*expectedDigest) == "" {
+		_, _ = fmt.Fprintln(c.stderr, "Error: -expected-digest is required with -attestation")
+		fs.Usage()
+		return options{}, errors.New("missing required -expected-digest")
 	}
 
 	verificationVersion, err := parseVerificationVersion(*verificationVersionParam)
@@ -119,6 +133,8 @@ func (c *command) parseArgs(args []string) (options, error) {
 	}
 
 	return options{
+		attestationPath:     strings.TrimSpace(*attestationPath),
+		expectedDigest:      strings.TrimSpace(*expectedDigest),
 		sbomPath:            strings.TrimSpace(*sbomPath),
 		digestValue:         strings.TrimSpace(*digestValue),
 		pubKeyPath:          strings.TrimSpace(*pubKeyPath),
@@ -236,6 +252,27 @@ func (c *command) verifySPDX(
 		return nil, "", err
 	}
 	return result, "SPDX", nil
+}
+
+func (c *command) verifyAttestation(opts options, publicKeyPEM string) error {
+	envelope, err := c.loadFileWithLabel(opts.attestationPath, "Failed to read attestation")
+	if err != nil {
+		return err
+	}
+
+	result, err := c.newApp().VerifyAttestation(application.AttestationInput{
+		Envelope:                   envelope,
+		ExpectedSHA256:             opts.expectedDigest,
+		DetachedPredicateSignature: opts.signature,
+	}, verificationkey.KeyInfo{PublicKey: publicKeyPEM})
+	if err != nil {
+		printResult(c.stdout, false, "Attestation", "Expected Digest", opts.expectedDigest, "", "", err)
+		return err
+	}
+
+	message := fmt.Sprintf("%s (predicate %s, predicate signature %s)", result.Message, result.PredicateType, result.PredicateSignature)
+	printResult(c.stdout, true, "Attestation", "Subject", result.MatchedSubject.Name+" sha256:"+result.MatchedSubject.SHA256(), result.Algorithm, message, nil)
+	return nil
 }
 
 func (c *command) verifyDigest(opts options, publicKeyPEM string) error {

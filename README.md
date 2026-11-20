@@ -117,6 +117,16 @@ if err != nil {
 }
 ```
 
+For attestation verification, pass the artifact digest you resolved
+yourself. Add `--signature` to also check a detached inner SBOM signature:
+
+```bash
+GOEXPERIMENT=jsonv2 go run ./cmd/sbom-offline-verification \
+  --attestation ./path/to/sbom.intoto.json \
+  --expected-digest sha256:ARTIFACT_SHA256 \
+  --pubkey ./path/to/public.pem
+```
+
 For digest verification:
 
 ```go
@@ -198,6 +208,55 @@ type VerificationKey struct {
 algorithm labels `ES256`, `ES384`, and `ES512`; current digest hashing is
 `sha256`.
 
+## Attestation Verification
+
+`VerifyAttestationWithKey` verifies a SecureSBOM attestation: a DSSE envelope
+around an in-toto Statement v1 whose predicate is an SBOM. It proves the SBOM
+was signed by the key holder and binds it to the artifact digest in the
+Statement's `subject`. The full contract is the
+[signing profile](docs/attestation-signing-profile.md).
+
+```go
+result, err := verifier.VerifyAttestationWithKey(securesbomverifier.AttestationInput{
+  Envelope:       envelopeJSON,
+  // Resolve this yourself from the artifact you are about to trust:
+  // the image manifest digest, or sha256sum of the file.
+  ExpectedSHA256: "sha256:4f1c...",
+}, securesbomverifier.VerificationKey{
+  KeyID:     "key-id",
+  Algorithm: "ES256",
+  PublicKey: publicKeyPEM,
+})
+if err != nil {
+  // errors.Is(err, securesbomverifier.ErrAttestationSubjectMismatch), ...
+  return err
+}
+sbom := result.Predicate // only returned after every check passed
+```
+
+Checks run in this order and stop at the first failure:
+
+| Check | Error |
+| --- | --- |
+| Expected digest supplied and well-formed | `ErrAttestationExpectedDigestRequired` |
+| Envelope shape, payload type, exactly one signature | `ErrAttestationInvalidEnvelope` |
+| Signature `keyid` matches `VerificationKey.KeyID` (when set) | `ErrAttestationKeyMismatch` |
+| Signature over the DSSE PAE verifies | `ErrAttestationSignatureInvalid` |
+| Payload is RFC 8785 canonical JSON | `ErrAttestationPayloadNotCanonical` |
+| Statement `_type`, fields and subjects | `ErrAttestationInvalidStatement` |
+| Predicate type supported and matching the predicate | `ErrAttestationUnsupportedPredicate` |
+| A subject's sha256 equals the expected digest | `ErrAttestationSubjectMismatch` |
+| Embedded predicate signature (always) or detached one (when supplied) | `ErrAttestationPredicateSignature` |
+
+`result.PredicateSignature` is `valid` when an inner SBOM signature was checked
+and `not_present` when the predicate carries none. For detached inner
+signatures, set `AttestationInput.DetachedPredicateSignature`: the base64
+signature for SPDX, or the JSF signature object JSON for CycloneDX.
+
+Signers can use the `attestation` package to build payloads that follow the
+profile: `attestation.BuildStatementPayload`, `attestation.PAE` and
+`attestation.NewEnvelope`.
+
 ## Stable Errors
 
 The root package exports stable errors for mapping verification results to API
@@ -208,6 +267,8 @@ responses. Use `errors.Is` because errors may include additional context.
   `ErrInvalidSignature`, `ErrInvalidKey`, `ErrKeyNotFound`.
 - Cryptographic verification failure: `ErrSignatureFail` for SBOM signatures and
   `ErrVerificationFailed` for digest signatures.
+- Attestations: the `ErrAttestation*` errors listed under
+  [Attestation Verification](#attestation-verification), one per check.
 
 For HTTP APIs, bad input generally maps to `400 Bad Request`, missing keys to
 `404 Not Found`, and cryptographic verification failures to `422 Unprocessable

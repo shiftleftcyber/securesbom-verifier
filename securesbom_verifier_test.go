@@ -6,6 +6,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/shiftleftcyber/securesbom-verifier/attestation"
 	"github.com/shiftleftcyber/securesbom-verifier/testsupport"
 )
 
@@ -217,5 +218,37 @@ func TestContractFixtures(t *testing.T) {
 		},
 	); !errors.Is(err, ErrVerificationFailed) {
 		t.Fatalf("expected invalid digest fixture to fail verification, got %v", err)
+	}
+}
+
+func TestVerifyAttestationWithKey_RootPackageAPI(t *testing.T) {
+	privKey, publicKey := testsupport.GenerateKeyPair(t)
+	envelope := testsupport.SignedAttestation(
+		t,
+		privKey,
+		"test-key",
+		testsupport.TestSubjects(),
+		attestation.PredicateTypeCycloneDX,
+		testsupport.SignedCycloneDXV2WithKey(t, privKey, "ES256"),
+	)
+	key := VerificationKey{KeyID: "test-key", Algorithm: "ES256", PublicKey: publicKey}
+
+	result, err := NewVerifier().VerifyAttestationWithKey(AttestationInput{
+		Envelope:       envelope,
+		ExpectedSHA256: testsupport.TestSubjectDigest,
+	}, key)
+	if err != nil {
+		t.Fatalf("VerifyAttestationWithKey: %v", err)
+	}
+	if result.PredicateSignature != "valid" || result.PredicateType != attestation.PredicateTypeCycloneDX {
+		t.Fatalf("unexpected result: %+v", result)
+	}
+
+	_, err = NewVerifier().VerifyAttestationWithKey(AttestationInput{
+		Envelope:       envelope,
+		ExpectedSHA256: "sha256:" + "ab" + testsupport.TestSubjectDigest[2:],
+	}, key)
+	if !errors.Is(err, ErrAttestationSubjectMismatch) {
+		t.Fatalf("err = %v, want ErrAttestationSubjectMismatch", err)
 	}
 }
